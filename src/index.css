@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Georgia", serif;
+  
+  --color-primary: #F59E0B;
+  --color-primary-foreground: #000000;
+  
+  --color-background: #0A0A0A;
+  --color-foreground: #FFFFFF;
+  
+  --color-card: #1A1A1A;
+  --color-card-foreground: #FFFFFF;
+  
+  --color-popover: #1A1A1A;
+  --color-popover-foreground: #FFFFFF;
+  
+  --color-secondary: #27272A;
+  --color-secondary-foreground: #FFFFFF;
+  
+  --color-muted: #27272A;
+  --color-muted-foreground: #A1A1AA;
+  
+  --color-accent: #27272A;
+  --color-accent-foreground: #FFFFFF;
+  
+  --color-destructive: #7F1D1D;
+  --color-destructive-foreground: #FFFFFF;
+  
+  --color-border: #333333;
+  --color-input: #333333;
+  --color-ring: #F59E0B;
+  
+  --radius-lg: 0.5rem;
+  --radius-md: calc(0.5rem - 2px);
+  --radius-sm: calc(0.5rem - 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  html {
+    @apply bg-background;
+  }
+}
+
+.ken-burns {
+  animation: kenburns 20s ease infinite alternate;
+}
+
+@keyframes kenburns {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.1) translate(-2%, -2%); }
+}
