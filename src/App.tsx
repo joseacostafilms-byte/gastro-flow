@@ -98,7 +98,7 @@ const PromoSlider = ({ promos }: { promos: string[] }) => {
   if (promos.length === 0) return null;
 
   return (
-    <div className="w-full h-64 md:h-80 relative overflow-hidden rounded-2xl mb-12">
+    <div className="fixed inset-0 z-[-1] overflow-hidden">
       <AnimatePresence mode="popLayout">
         <motion.img
           key={currentIndex}
@@ -111,11 +111,7 @@ const PromoSlider = ({ promos }: { promos: string[] }) => {
           referrerPolicy="no-referrer"
         />
       </AnimatePresence>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-8">
-        <h2 className="text-3xl md:text-5xl font-display font-bold text-white">
-          Promociones Especiales
-        </h2>
-      </div>
+      <div className="absolute inset-0 bg-black/70"></div>
     </div>
   );
 };
@@ -127,6 +123,7 @@ const MainApp = ({
   categories,
   promos,
   addOrder,
+  theme,
 }: {
   user: any;
   onLogout: () => void;
@@ -134,10 +131,12 @@ const MainApp = ({
   categories: string[];
   promos: string[];
   addOrder: (order: any) => void;
+  theme: any;
 }) => {
   const [cart, setCart] = useState<Array<{ item: any; quantity: number }>>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("Todos");
+  const [tableNumber, setTableNumber] = useState<string>("");
 
   const addToCart = (item: any) => {
     setCart((prev) => {
@@ -170,6 +169,11 @@ const MainApp = ({
   const totalItems = cart.reduce((sum, p) => sum + p.quantity, 0);
 
   const handleCheckout = () => {
+    if (!tableNumber) {
+      alert("Por favor, ingresa tu número de mesa.");
+      return;
+    }
+
     setIsCartOpen(false);
     confetti({
       particleCount: 150,
@@ -181,7 +185,7 @@ const MainApp = ({
     
     addOrder({
       id: Math.floor(Math.random() * 10000),
-      mesa: Math.floor(Math.random() * 10) + 1,
+      mesa: tableNumber,
       items: cart.map(p => ({ 
         id: p.item.id,
         nombre: p.item.nombre, 
@@ -192,10 +196,12 @@ const MainApp = ({
       total: total,
       time: 0,
       status: 'pendiente',
-      userId: user.nombre
+      userId: user.nombre,
+      userPhone: user.telefono || "No especificado"
     });
 
     setCart([]);
+    setTableNumber("");
   };
 
   const filteredItems =
@@ -204,13 +210,20 @@ const MainApp = ({
       : menuItems.filter((item) => item.categoria === activeCategory);
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24">
+    <div className="min-h-screen bg-transparent text-foreground pb-24 relative">
+      <PromoSlider promos={promos} />
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <ChefHat className="w-6 h-6 text-primary" />
-          <h1 className="text-xl font-display font-bold tracking-tight">
-            GASTRO<span className="text-primary">FLOW</span>
-          </h1>
+          {theme.logo ? (
+            <img src={theme.logo} alt="Logo" className="h-8 object-contain" />
+          ) : (
+            <>
+              <ChefHat className="w-6 h-6 text-primary" />
+              <h1 className="text-xl font-display font-bold tracking-tight">
+                GASTRO<span className="text-primary">FLOW</span>
+              </h1>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -290,6 +303,19 @@ const MainApp = ({
 
           {cart.length > 0 && (
             <div className="pt-6 border-t border-border space-y-4 mt-auto">
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-bold">
+                  Número de Mesa
+                </label>
+                <input
+                  type="number"
+                  value={tableNumber}
+                  onChange={(e) => setTableNumber(e.target.value)}
+                  className="w-full bg-background border border-border p-3 rounded-lg text-white focus:border-primary outline-none"
+                  placeholder="Ej. 5"
+                  required
+                />
+              </div>
               <div className="flex justify-between items-center text-lg font-bold">
                 <span>Total</span>
                 <span className="text-primary">${total.toFixed(2)}</span>
@@ -305,9 +331,7 @@ const MainApp = ({
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-6 py-12 space-y-8">
-        <PromoSlider promos={promos} />
-
+      <main className="max-w-7xl mx-auto px-6 py-12 space-y-8 relative z-10">
         <div className="space-y-2">
           <h2 className="text-4xl font-display font-bold">
             Hola, {user.nombre}
@@ -398,7 +422,9 @@ export default function App() {
   const [theme, setTheme] = useState({
     primary: "#F59E0B",
     background: "#0A0A0A",
-    font: "font-sans",
+    font: "system-ui, sans-serif",
+    logo: "",
+    textColor: "#FFFFFF",
   });
 
   const [categories, setCategories] = useState([
@@ -439,6 +465,13 @@ export default function App() {
       pin: "1111",
       estado: "Activo",
     },
+    {
+      id: "4",
+      nombre: "Admin Diseño",
+      rol: "Diseño",
+      pin: "1010",
+      estado: "Activo",
+    }
   ]);
 
   const [orders, setOrders] = useState<any[]>([
@@ -519,12 +552,15 @@ export default function App() {
 
   return (
     <div
-      className={`relative min-h-screen bg-background text-foreground ${theme.font}`}
+      className={`relative min-h-screen bg-background text-foreground`}
       style={
         {
           "--color-primary": theme.primary,
           "--color-background": theme.background,
+          "--color-foreground": theme.textColor,
           backgroundColor: theme.background,
+          color: theme.textColor,
+          fontFamily: theme.font,
         } as React.CSSProperties
       }
     >
@@ -542,8 +578,14 @@ export default function App() {
             </div>
             <div className="flex items-center justify-center bg-background border-l border-border p-12 relative">
               <div className="absolute top-12 left-12 font-display font-extrabold text-2xl tracking-tighter flex items-center gap-2">
-                <ChefHat className="w-6 h-6 text-primary" />
-                GASTRO<span className="text-primary">FLOW</span>
+                {theme.logo ? (
+                  <img src={theme.logo} alt="Logo" className="h-8 object-contain" />
+                ) : (
+                  <>
+                    <ChefHat className="w-6 h-6 text-primary" />
+                    GASTRO<span className="text-primary">FLOW</span>
+                  </>
+                )}
               </div>
               <OnboardingForm onComplete={(data) => setUser(data)} />
               <button
@@ -569,6 +611,7 @@ export default function App() {
               categories={categories}
               promos={promos}
               addOrder={(order) => setOrders((prev) => [...prev, order])}
+              theme={theme}
             />
           </motion.div>
         )}

@@ -81,7 +81,7 @@ export const StaffLogin = ({
           </div>
           <div className="text-xs text-muted-foreground mt-8 text-center">
             <p>Demo PINs:</p>
-            <p>Gerente: 1234 | Mesonero: 0000 | Cocina: 1111</p>
+            <p>Gerente: 1234 | Mesonero: 0000 | Cocina: 1111 | Diseño: 1010</p>
           </div>
         </form>
       </motion.div>

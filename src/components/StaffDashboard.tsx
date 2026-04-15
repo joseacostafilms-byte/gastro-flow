@@ -243,6 +243,27 @@ export const StaffDashboard = ({
       headStyles: { fillColor: [245, 158, 11] } // Primary color
     });
 
+    const finalY = (doc as any).lastAutoTable.finalY || 75;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Directorio de Clientes", 14, finalY + 15);
+
+    const uniqueUsers = Array.from(new Set(orders.map((o: any) => o.userId)));
+    const customersData = uniqueUsers.map((userId: any) => {
+      const userOrders = orders.filter((o: any) => o.userId === userId);
+      const userPhone = userOrders[0]?.userPhone || "No especificado";
+      return [userId, userPhone, userOrders.length.toString()];
+    });
+
+    autoTable(doc, {
+      startY: finalY + 20,
+      head: [['Nombre', 'Teléfono', 'Total Pedidos']],
+      body: customersData,
+      theme: 'grid',
+      headStyles: { fillColor: [245, 158, 11] }
+    });
+
     doc.save("reporte_gastroflow.pdf");
   };
 
@@ -322,7 +343,12 @@ export const StaffDashboard = ({
               label="Pedidos Activos"
               roles={["Gerente", "Mesonero", "Cocina"]}
             />
-            <NavButton id="inventario" icon={Package} label="Inventario" />
+            <NavButton 
+              id="inventario" 
+              icon={Package} 
+              label="Inventario" 
+              roles={["Gerente"]}
+            />
             <NavButton
               id="platos"
               icon={UtensilsCrossed}
@@ -336,6 +362,12 @@ export const StaffDashboard = ({
               roles={["Gerente"]}
             />
             <NavButton
+              id="clientes"
+              icon={Users}
+              label="Clientes"
+              roles={["Gerente"]}
+            />
+            <NavButton
               id="reportes"
               icon={TrendingUp}
               label="Reportes"
@@ -345,7 +377,7 @@ export const StaffDashboard = ({
               id="configuracion"
               icon={Settings}
               label="Configuración"
-              roles={["Gerente"]}
+              roles={["Gerente", "Diseño"]}
             />
           </nav>
         </div>
@@ -385,51 +417,52 @@ export const StaffDashboard = ({
                 </div>
               </header>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 {orders.map((order: any) => (
                   <div
                     key={order.id}
-                    className="bg-card border border-border rounded-xl p-6 flex flex-col"
+                    className="bg-card border border-border rounded-xl p-5 md:p-6 flex flex-col hover:border-primary/50 transition-colors"
                   >
-                    <div className="flex justify-between items-start mb-6">
-                      <div>
-                        <span className="text-xs font-bold text-primary uppercase tracking-widest">
-                          Mesa {order.mesa}
+                    <div className="flex justify-between items-start mb-4 md:mb-6 gap-2">
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-primary uppercase tracking-widest block truncate">
+                          Mesa {order.mesa} - {order.userId}
                         </span>
-                        <h3 className="text-lg font-bold mt-1">
+                        <h3 className="text-base md:text-lg font-bold mt-1 truncate">
                           Pedido #{order.id}
                         </h3>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className="text-xs text-muted-foreground">
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
                           hace {order.time} min
                         </span>
                         <span
-                          className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-widest ${getStatusColor(order.status)}`}
+                          className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-widest text-center ${getStatusColor(order.status)}`}
                         >
                           {getStatusLabel(order.status)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="space-y-3 mb-6 flex-1">
+                    <div className="space-y-2 md:space-y-3 mb-4 md:mb-6 flex-1 overflow-y-auto max-h-[150px] pr-2 custom-scrollbar">
                       {order.items.map((item: any, i: number) => (
-                        <div key={i} className="flex justify-between text-sm">
-                          <span>
-                            {item.qty}x {item.nombre}
+                        <div key={i} className="flex justify-between text-sm gap-2">
+                          <span className="truncate">
+                            <span className="font-bold text-primary mr-2">{item.qty}x</span>
+                            {item.nombre}
                           </span>
                         </div>
                       ))}
                     </div>
 
-                    <div className="pt-4 border-t border-border flex flex-wrap gap-2">
+                    <div className="pt-4 border-t border-border flex flex-col sm:flex-row flex-wrap gap-2 mt-auto">
                       <button
                         onClick={() =>
                           alert(
-                            `Detalles del pedido #${order.id}:\nMesa: ${order.mesa}\nTiempo: ${order.time} min\nItems: ${order.items.map((i: any) => `${i.qty}x ${i.nombre}`).join(", ")}`,
+                            `Detalles del pedido #${order.id}:\nCliente: ${order.userId}\nMesa: ${order.mesa}\nTiempo: ${order.time} min\nItems: ${order.items.map((i: any) => `${i.qty}x ${i.nombre}`).join(", ")}`,
                           )
                         }
-                        className="flex-1 min-w-[100px] bg-background border border-border hover:border-primary text-white py-2 rounded-lg text-sm font-bold transition-colors"
+                        className="flex-1 w-full sm:w-auto min-w-[100px] bg-background border border-border hover:border-primary text-white py-2 px-3 rounded-lg text-xs md:text-sm font-bold transition-colors"
                       >
                         Detalles
                       </button>
@@ -440,7 +473,7 @@ export const StaffDashboard = ({
                             onClick={() =>
                               handleUpdateOrderStatus(order.id, "en_cocina")
                             }
-                            className="flex-1 min-w-[100px] bg-blue-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-600 transition-colors"
+                            className="flex-1 w-full sm:w-auto min-w-[100px] bg-blue-500 text-white py-2 px-3 rounded-lg text-xs md:text-sm font-bold hover:bg-blue-600 transition-colors"
                           >
                             Preparar
                           </button>
@@ -452,7 +485,7 @@ export const StaffDashboard = ({
                             onClick={() =>
                               handleUpdateOrderStatus(order.id, "listo")
                             }
-                            className="flex-1 min-w-[100px] bg-green-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-green-600 transition-colors"
+                            className="flex-1 w-full sm:w-auto min-w-[100px] bg-green-500 text-white py-2 px-3 rounded-lg text-xs md:text-sm font-bold hover:bg-green-600 transition-colors"
                           >
                             Listo
                           </button>
@@ -462,7 +495,7 @@ export const StaffDashboard = ({
                         (role === "Mesonero" || role === "Gerente") && (
                           <button
                             onClick={() => handleCompleteOrder(order.id)}
-                            className="flex-1 min-w-[100px] bg-primary text-black py-2 rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors"
+                            className="flex-1 w-full sm:w-auto min-w-[100px] bg-primary text-black py-2 px-3 rounded-lg text-xs md:text-sm font-bold hover:bg-primary/90 transition-colors"
                           >
                             Entregar
                           </button>
@@ -924,6 +957,61 @@ export const StaffDashboard = ({
             </div>
           )}
 
+          {activeTab === "clientes" && (
+            <div className="space-y-8">
+              <header>
+                <h2 className="text-4xl font-display font-bold mb-2">
+                  Directorio de Clientes
+                </h2>
+                <p className="text-muted-foreground">
+                  Información de contacto de los clientes.
+                </p>
+              </header>
+
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-background/50">
+                        <th className="p-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                          Nombre
+                        </th>
+                        <th className="p-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                          Teléfono
+                        </th>
+                        <th className="p-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                          Total Pedidos
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {Array.from(new Set(orders.map((o: any) => o.userId))).map(
+                        (userId: any) => {
+                          const userOrders = orders.filter((o: any) => o.userId === userId);
+                          const userPhone = userOrders[0]?.userPhone || "No especificado";
+                          return (
+                            <tr
+                              key={userId}
+                              className="hover:bg-background/50 transition-colors"
+                            >
+                              <td className="p-4 font-bold">{userId}</td>
+                              <td className="p-4 text-muted-foreground">
+                                {userPhone}
+                              </td>
+                              <td className="p-4 font-bold text-primary">
+                                {userOrders.length}
+                              </td>
+                            </tr>
+                          );
+                        }
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === "reportes" && (
             <div className="space-y-8">
               <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
@@ -997,6 +1085,20 @@ export const StaffDashboard = ({
                   <div className="space-y-6">
                     <div>
                       <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-bold">
+                        Logo URL (o dejar vacío para texto)
+                      </label>
+                      <input
+                        type="text"
+                        value={theme.logo || ""}
+                        onChange={(e) =>
+                          setTheme({ ...theme, logo: e.target.value })
+                        }
+                        placeholder="https://ejemplo.com/logo.png"
+                        className="w-full bg-background border border-border p-3 rounded-lg text-white focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-bold">
                         Color Primario
                       </label>
                       <div className="flex gap-4 items-center">
@@ -1043,6 +1145,29 @@ export const StaffDashboard = ({
                     </div>
                     <div>
                       <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-bold">
+                        Color de Texto
+                      </label>
+                      <div className="flex gap-4 items-center">
+                        <input
+                          type="color"
+                          value={theme.textColor || "#FFFFFF"}
+                          onChange={(e) =>
+                            setTheme({ ...theme, textColor: e.target.value })
+                          }
+                          className="w-12 h-12 rounded cursor-pointer bg-transparent border-0 p-0"
+                        />
+                        <input
+                          type="text"
+                          value={theme.textColor || "#FFFFFF"}
+                          onChange={(e) =>
+                            setTheme({ ...theme, textColor: e.target.value })
+                          }
+                          className="flex-1 bg-background border border-border p-3 rounded-lg text-white focus:border-primary outline-none uppercase"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-bold">
                         Fuente Principal
                       </label>
                       <select
@@ -1052,9 +1177,56 @@ export const StaffDashboard = ({
                         }
                         className="w-full bg-background border border-border p-3 rounded-lg text-white focus:border-primary outline-none"
                       >
-                        <option value="font-sans">Sans Serif (Moderna)</option>
-                        <option value="font-serif">Serif (Clásica)</option>
-                        <option value="font-mono">Monospace (Técnica)</option>
+                        <option value="system-ui, sans-serif">System UI</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Helvetica Neue', Helvetica, sans-serif">Helvetica</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                        <option value="Tahoma, sans-serif">Tahoma</option>
+                        <option value="Geneva, sans-serif">Geneva</option>
+                        <option value="'Lucida Sans', sans-serif">Lucida Sans</option>
+                        <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                        <option value="Roboto, sans-serif">Roboto</option>
+                        <option value="'Open Sans', sans-serif">Open Sans</option>
+                        <option value="Lato, sans-serif">Lato</option>
+                        <option value="Montserrat, sans-serif">Montserrat</option>
+                        <option value="'Source Sans Pro', sans-serif">Source Sans Pro</option>
+                        <option value="'Noto Sans', sans-serif">Noto Sans</option>
+                        <option value="'PT Sans', sans-serif">PT Sans</option>
+                        <option value="Calibri, sans-serif">Calibri</option>
+                        <option value="Candara, sans-serif">Candara</option>
+                        <option value="Optima, sans-serif">Optima</option>
+                        <option value="Corbel, sans-serif">Corbel</option>
+                        <option value="'Century Gothic', sans-serif">Century Gothic</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="Garamond, serif">Garamond</option>
+                        <option value="'Palatino Linotype', serif">Palatino</option>
+                        <option value="Baskerville, serif">Baskerville</option>
+                        <option value="'Playfair Display', serif">Playfair Display</option>
+                        <option value="Merriweather, serif">Merriweather</option>
+                        <option value="Lora, serif">Lora</option>
+                        <option value="'PT Serif', serif">PT Serif</option>
+                        <option value="'Noto Serif', serif">Noto Serif</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="'Lucida Console', monospace">Lucida Console</option>
+                        <option value="Monaco, monospace">Monaco</option>
+                        <option value="Consolas, monospace">Consolas</option>
+                        <option value="Inconsolata, monospace">Inconsolata</option>
+                        <option value="'Fira Code', monospace">Fira Code</option>
+                        <option value="'Source Code Pro', monospace">Source Code Pro</option>
+                        <option value="'Space Mono', monospace">Space Mono</option>
+                        <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                        <option value="'Brush Script MT', cursive">Brush Script MT</option>
+                        <option value="Impact, fantasy">Impact</option>
+                        <option value="'Arial Black', sans-serif">Arial Black</option>
+                        <option value="Papyrus, fantasy">Papyrus</option>
+                        <option value="Copperplate, fantasy">Copperplate</option>
+                        <option value="fantasy">Fantasy (Generic)</option>
+                        <option value="cursive">Cursive (Generic)</option>
+                        <option value="monospace">Monospace (Generic)</option>
+                        <option value="sans-serif">Sans-serif (Generic)</option>
+                        <option value="serif">Serif (Generic)</option>
                       </select>
                     </div>
                   </div>
@@ -1151,7 +1323,7 @@ export const StaffDashboard = ({
                         setNewPromo("");
                       }
                     }}
-                    className="flex flex-col sm:flex-row gap-2"
+                    className="flex flex-col sm:flex-row gap-2 mb-4"
                   >
                     <input
                       type="url"
@@ -1167,6 +1339,21 @@ export const StaffDashboard = ({
                       Añadir Imagen
                     </button>
                   </form>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-muted-foreground">O subir desde el dispositivo:</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          const url = URL.createObjectURL(file);
+                          setPromos([...promos, url]);
+                        }
+                      }}
+                      className="text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
