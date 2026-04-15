@@ -1094,8 +1094,23 @@ export const StaffDashboard = ({
                           setTheme({ ...theme, logo: e.target.value })
                         }
                         placeholder="https://ejemplo.com/logo.png"
-                        className="w-full bg-background border border-border p-3 rounded-lg text-white focus:border-primary outline-none"
+                        className="w-full bg-background border border-border p-3 rounded-lg text-white focus:border-primary outline-none mb-2"
                       />
+                      <div className="flex items-center gap-4">
+                        <span className="text-[10px] text-muted-foreground">O subir desde el dispositivo:</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              const file = e.target.files[0];
+                              const url = URL.createObjectURL(file);
+                              setTheme({ ...theme, logo: url });
+                            }
+                          }}
+                          className="text-xs text-muted-foreground file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-bold">
