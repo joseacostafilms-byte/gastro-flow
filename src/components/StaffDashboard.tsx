@@ -986,15 +986,15 @@ export const StaffDashboard = ({
                     </thead>
                     <tbody className="divide-y divide-border">
                       {Array.from(new Set(orders.map((o: any) => o.userId))).map(
-                        (userId: any) => {
+                        (userId: any, index: number) => {
                           const userOrders = orders.filter((o: any) => o.userId === userId);
                           const userPhone = userOrders[0]?.userPhone || "No especificado";
                           return (
                             <tr
-                              key={userId}
+                              key={userId || `unknown-${index}`}
                               className="hover:bg-background/50 transition-colors"
                             >
-                              <td className="p-4 font-bold">{userId}</td>
+                              <td className="p-4 font-bold">{userId || 'Cliente Desconocido'}</td>
                               <td className="p-4 text-muted-foreground">
                                 {userPhone}
                               </td>
